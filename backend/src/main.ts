@@ -1,8 +1,59 @@
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import {
+  INestApplication,
+  Logger,
+  LoggerService,
+  ValidationPipe,
+} from '@nestjs/common';
+import * as fs from 'fs';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+class App {
+  app: INestApplication;
+  swaggerConfig: Omit<OpenAPIObject, 'paths'>;
+
+  private logger: LoggerService;
+
+  constructor() {
+    this.logger = new Logger('App');
+    void this.startSetup();
+  }
+
+  async startSetup() {
+    try {
+      await this.bootstrap();
+    } catch (err) {
+      this.logger.error('Error during application bootstrap', err);
+    }
+  }
+
+  swaggerSetup() {
+    this.swaggerConfig = new DocumentBuilder()
+      .setTitle('Crud Caching API')
+      .setDescription('API documentation for the application')
+      .build();
+
+    const document = SwaggerModule.createDocument(this.app, this.swaggerConfig);
+    fs.writeFileSync('./swagger.json', JSON.stringify(document));
+    SwaggerModule.setup('api', this.app, document);
+  }
+
+  async bootstrap() {
+    this.app = await NestFactory.create(AppModule, {
+      logger: this.logger,
+    });
+    this.app.useGlobalPipes(new ValidationPipe());
+  }
+
+  async serverSetup() {
+    const port = process.env.NODE_PORT || 3000;
+    await this.app.listen(port, () => {
+      this.logger.log(
+        `Server is running on: http://${process.env.BASE_URL}:${port}`,
+      );
+    });
+  }
 }
-bootstrap();
+
+export default new App();

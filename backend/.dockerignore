@@ -1,0 +1,8 @@
+.git/
+.gitignore
+npm-debug.log
+.eslintrc.json
+.prettierrc
+package-lock.json
+.vscode
+.npmrc
