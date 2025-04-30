@@ -1,5 +1,5 @@
 services:
-  crud-caching-api:
+  api:
     container_name: crud-caching-api
     build:
       context: ./backend
@@ -8,21 +8,32 @@ services:
       - '3000:3000'
     env_file: 
       - ./backend/.env
+    volumes:
+      - ./backend:/usr/src/app 
+      - /usr/src/app/node_modules 
+    networks:
+      - crud-caching-network
     depends_on:
-      - db
+      - database
 
-  db:
+  database:
+    container_name: crud-caching-db
     image: postgres:latest
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-xbVMjR57esDR0a5}
+      POSTGRES_DB: ${DATABASE_NAME:-crud_caching}
       POSTGRES_HOST_AUTH_METHOD: scram-sha-256
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=scram-sha-256
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - crud-caching-network
 
 volumes:
   postgres_data:
+
+networks:
+  crud-caching-network:
