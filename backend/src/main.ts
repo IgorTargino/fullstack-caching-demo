@@ -5,9 +5,10 @@ import {
   INestApplication,
   Logger,
   LoggerService,
-  ValidationPipe,
 } from '@nestjs/common';
 import * as fs from 'fs';
+import { ZodValidationPipe } from './app/shared/pipes/zod-validation.pipe';
+import { patchNestJsSwagger } from 'nestjs-zod';
 
 class App {
   app: INestApplication;
@@ -23,6 +24,8 @@ class App {
   async startSetup() {
     try {
       await this.bootstrap();
+      this.swaggerSetup();
+      await this.serverSetup();
     } catch (err) {
       this.logger.error('Error during application bootstrap', err);
     }
@@ -40,14 +43,15 @@ class App {
   }
 
   async bootstrap() {
-    this.app = await NestFactory.create(AppModule, {
-      logger: this.logger,
-    });
-    this.app.useGlobalPipes(new ValidationPipe());
+    this.app = await NestFactory.create(AppModule, { logger: this.logger});
+
+    patchNestJsSwagger();
+    this.app.useGlobalPipes(new ZodValidationPipe());
   }
 
   async serverSetup() {
     const port = process.env.NODE_PORT || 3000;
+
     await this.app.listen(port, () => {
       this.logger.log(
         `Server is running on: http://${process.env.BASE_URL}:${port}`,

@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  output   =  "../generated/prisma"
 }
 
 datasource db {
@@ -12,11 +12,11 @@ model User {
   id           String    @id @default(uuid())
   email        String    @unique @db.VarChar(255)
   passwordHash String    @db.VarChar(255) @map("password_hash")
-  name         String?
+  name         String    
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  lastLoginAt  DateTime? @map("last_login_at")
 
+  @@index([id])
   @@index([email])
 
   // roles       Role[]
