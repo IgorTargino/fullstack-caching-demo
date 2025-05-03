@@ -1,6 +1,6 @@
 services:
-  api:
-    container_name: crud-caching-api
+  backend:
+    container_name: crud-caching-backend
     build:
       context: ./backend
       dockerfile: ./Dockerfile
@@ -16,6 +16,23 @@ services:
       - database
       - redis
 
+  frontend:
+    container_name: crud-caching-frontend
+    ports:
+      - "3001:3000"
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
 
   database:
     container_name: crud-caching-db
