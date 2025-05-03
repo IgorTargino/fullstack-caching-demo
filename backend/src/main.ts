@@ -1,14 +1,14 @@
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import {
   INestApplication,
-  Logger,
-  LoggerService,
 } from '@nestjs/common';
 import * as fs from 'fs';
 import { ZodValidationPipe } from './app/shared/pipes/zod-validation.pipe';
 import { patchNestJsSwagger } from 'nestjs-zod';
+import { LoggerService } from './infra/modules/logger/logger.service';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './infra/filters/http-exception.filter';
 
 class App {
   app: INestApplication;
@@ -17,7 +17,7 @@ class App {
   private logger: LoggerService;
 
   constructor() {
-    this.logger = new Logger('App');
+    this.logger = new LoggerService();
     void this.startSetup();
   }
 
@@ -43,10 +43,13 @@ class App {
   }
 
   async bootstrap() {
-    this.app = await NestFactory.create(AppModule, { logger: this.logger});
+    this.app = await NestFactory.create(AppModule, { 
+      logger: this.logger
+    });
 
     patchNestJsSwagger();
     this.app.useGlobalPipes(new ZodValidationPipe());
+    this.app.useGlobalFilters(new HttpExceptionFilter(this.logger));
   }
 
   async serverSetup() {
